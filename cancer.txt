@@ -1,0 +1,240 @@
+Question -   Plot ROC and AUC on breast cancer dataset and answer of which algorithm works best on this dataset. ?
+
+Code - 
+from sklearn.datasets import load_breast_cancer
+import pandas as pd
+dataset=load_breast_cancer()
+df=pd.DataFrame(dataset['data'],columns=dataset['feature_names'])
+df['target']=dataset['target']
+print(df.head())
+print(dataset)
+
+from sklearn.model_selection import train_test_split
+data=df.loc[:,df.columns != 'target']
+target=df['target']
+x_train,x_test,y_train,y_test=train_test_split(data,target,test_size=0.20,random_state=1)
+
+print("train data of x_train is:" ,x_train.shape)
+print("train data of x_train is:" ,x_test.shape)
+print("train data of x_train is:" ,y_train.shape)
+print("train data of x_train is:" ,y_test.shape)
+
+print(y_train.value_counts())
+print(y_test.value_counts())
+
+from sklearn.linear_model import LogisticRegression
+logreg=LogisticRegression()
+logreg.fit(x_train,y_train)
+y_pred=logreg.predict(x_test)
+print(y_pred)
+from sklearn import metrics
+cnf_matrix=metrics.confusion_matrix(y_test,y_pred)
+print(cnf_matrix)
+print(metrics.classification_report(y_test,y_pred,digits=3))
+
+import matplotlib.pyplot as plt
+y_pred_proba=logreg.predict_proba(x_test)[::,1]
+fpr,tpr,_=metrics.roc_curve(y_test,y_pred_proba)
+auc=metrics.roc_auc_score(y_test,y_pred_proba)
+plt.plot(fpr,tpr,label="Logistic, auc="+str(auc))
+plt.legend(loc=4)
+plt.show()
+y_pred_proba=logreg.predict_proba(x_test)[::,1]
+print(y_pred_proba)
+print(fpr)
+print(tpr)
+print(_)
+
+from sklearn.neighbors import KNeighborsClassifier
+k=int(input('Enter number of neighbours'))
+model=KNeighborsClassifier(n_neighbors=k)
+model.fit(x_train,y_train)
+predicteddata=model.predict(x_test)
+
+from sklearn import metrics
+accuracy=metrics.accuracy_score(y_test,predicteddata)
+print("Accuracy of model is : ",accuracy)
+from sklearn.metrics import confusion_matrix
+cm=confusion_matrix(y_test,predicteddata)
+print(cm)
+
+from sklearn.metrics import classification_report
+cr=classification_report(y_test,predicteddata)
+print(cr)
+
+import matplotlib.pyplot as plt
+y_pred_proba_knn=model.predict_proba(x_test)[::,1]
+fpr,tpr,_=metrics.roc_curve(y_test,y_pred_proba_knn)
+auc=metrics.roc_auc_score(y_test,
+y_pred_proba_knn)
+plt.plot(fpr,tpr,label="data 1, auc="+str(auc))
+plt.legend()
+plt.show()
+
+import matplotlib.pyplot as plt
+y_pred_proba_knn=model.predict_proba(x_test)[::,1]
+fpr_k,tpr_k,_k=metrics.roc_curve(y_test,y_pred_proba_knn)
+auc=metrics.roc_auc_score(y_test,y_pred_proba_knn)
+plt.plot(fpr_k,tpr_k,label="KNN, auc="+str(auc))
+fpr,tpr,_=metrics.roc_curve(y_test,y_pred_proba)
+auc=metrics.roc_auc_score(y_test,y_pred_proba)
+plt.plot(fpr,tpr,label="Logistic, auc="+str(auc))
+plt.legend()
+plt.show()
+
+from sklearn.svm import SVC
+model=SVC(kernel='linear')
+print(model)
+print(model.fit(x_train,y_train))
+predicteddata=model.predict(x_test)
+print(predicteddata)
+
+print(y_test)
+from sklearn.model_selection import GridSearchCV
+param_grid={'C':[0.01 , 0.1, 3 , 7 , 10],'kernel':['rbf' , 'poly', 'linear'] }
+gridsearch= GridSearchCV(SVC(),param_grid,cv=5)
+a=gridsearch.fit(x_train,y_train)
+print(a)
+b=gridsearch.best_params_
+print(b)
+c=gridsearch.best_score_
+print("Accuracy after SVC",c)
+
+from sklearn.tree import DecisionTreeClassifier 
+clf = DecisionTreeClassifier()
+a = clf.fit(x_train,y_train)
+y_pred = a.predict(x_test)
+print("Accuracy after decision tree:",metrics.accuracy_score(y_test,y_pred))
+
+Output -
+
+==================== RESTART: D:/CDAC-AI/ML/4 jan/cancer.py ====================
+   mean radius  mean texture  ...  worst fractal dimension  target
+0        17.99         10.38  ...                  0.11890       0
+1        20.57         17.77  ...                  0.08902       0
+2        19.69         21.25  ...                  0.08758       0
+3        11.42         20.38  ...                  0.17300       0
+4        20.29         14.34  ...                  0.07678       0
+
+[5 rows x 31 columns]
+
+train data of x_train is: (455, 30)
+train data of x_train is: (114, 30)
+train data of x_train is: (455,)
+train data of x_train is: (114,)
+1    285
+0    170
+Name: target, dtype: int64
+1    72
+0    42
+Name: target, dtype: int64
+
+Warning (from warnings module):
+  File "C:\Users\Shivaji.Patil\AppData\Local\Programs\Python\Python39\lib\site-packages\sklearn\linear_model\_logistic.py", line 814
+    n_iter_i = _check_optimize_result(
+ConvergenceWarning: lbfgs failed to converge (status=1):
+STOP: TOTAL NO. of ITERATIONS REACHED LIMIT.
+
+Increase the number of iterations (max_iter) or scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+[1 0 1 0 0 0 0 0 1 1 1 0 0 1 1 1 1 1 1 0 1 1 0 1 0 1 1 0 0 0 0 1 0 0 1 1 0
+ 1 0 1 1 1 1 1 1 0 1 1 1 0 0 0 1 1 1 1 1 0 1 1 1 0 1 0 1 1 1 0 1 1 1 1 1 0
+ 1 0 1 1 1 0 1 0 1 0 1 1 0 1 0 1 1 0 1 1 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1
+ 1 0 1]
+[[38  4]
+ [ 2 70]]
+              precision    recall  f1-score   support
+
+           0      0.950     0.905     0.927        42
+           1      0.946     0.972     0.959        72
+
+    accuracy                          0.947       114
+   macro avg      0.948     0.938     0.943       114
+weighted avg      0.947     0.947     0.947       114
+
+[6.60878450e-01 3.48242077e-01 9.95996130e-01 1.41627375e-03
+ 2.65603021e-01 1.46250154e-03 2.62577064e-05 1.74501884e-02
+ 9.78011663e-01 9.87881089e-01 9.69196304e-01 1.50197489e-01
+ 1.54364444e-01 9.82619099e-01 8.05431898e-01 8.80178478e-01
+ 9.67676281e-01 9.74325964e-01 9.99120538e-01 1.60443070e-06
+ 9.89286154e-01 9.54139998e-01 1.95500351e-03 9.76307676e-01
+ 8.27645476e-02 8.81063311e-01 9.70410008e-01 8.82135428e-07
+ 2.20356812e-18 4.90694829e-03 4.12819802e-10 9.95734921e-01
+ 7.23364370e-05 7.98304883e-02 9.74056079e-01 9.73560095e-01
+ 1.08919158e-03 9.17043488e-01 3.54490017e-01 9.94071225e-01
+ 9.97566143e-01 8.18176854e-01 9.36866491e-01 9.87632204e-01
+ 9.79060715e-01 1.22738517e-01 9.91615835e-01 9.97135029e-01
+ 7.29618695e-01 8.65981603e-03 4.25592627e-05 2.29549010e-13
+ 9.96929712e-01 9.95956713e-01 9.88230973e-01 9.64457952e-01
+ 9.88788861e-01 2.02003700e-01 9.87483018e-01 9.98035626e-01
+ 9.93708835e-01 1.95802056e-02 7.97778387e-01 2.93955263e-01
+ 9.70100755e-01 9.45805024e-01 9.28997133e-01 4.53511293e-08
+ 9.96426574e-01 9.54922342e-01 9.98196229e-01 9.98576734e-01
+ 5.48190487e-01 1.30657328e-03 9.97604427e-01 4.93037137e-07
+ 9.59534117e-01 7.86605458e-01 9.96043519e-01 6.40088607e-04
+ 9.96861622e-01 2.23126388e-06 9.85886917e-01 3.30588006e-03
+ 9.92344926e-01 9.91406842e-01 3.37950241e-01 9.21586492e-01
+ 8.21800099e-03 9.96619139e-01 9.60714863e-01 4.91675764e-04
+ 9.95937843e-01 9.99296326e-01 4.63591239e-04 2.48275880e-01
+ 9.98792822e-01 9.76219526e-01 9.93992610e-01 9.72743710e-01
+ 9.22194830e-01 9.90706267e-01 9.93803440e-01 8.06125780e-01
+ 9.76265266e-01 9.78335356e-01 9.98891908e-01 9.96349684e-01
+ 1.14737055e-02 1.70800871e-02 8.75310296e-01 9.84186296e-01
+ 4.80140190e-01 9.92551361e-01]
+[0.         0.         0.         0.02380952 0.02380952 0.04761905
+ 0.04761905 0.07142857 0.07142857 0.0952381  0.0952381  0.16666667
+ 0.16666667 1.        ]
+[0.         0.01388889 0.75       0.75       0.88888889 0.88888889
+ 0.94444444 0.94444444 0.97222222 0.97222222 0.98611111 0.98611111
+ 1.         1.        ]
+[1.99929633e+00 9.99296326e-01 9.60714863e-01 9.59534117e-01
+ 8.80178478e-01 8.75310296e-01 7.97778387e-01 7.86605458e-01
+ 6.60878450e-01 5.48190487e-01 4.80140190e-01 3.37950241e-01
+ 2.93955263e-01 2.20356812e-18]
+Enter number of neighbours5
+Accuracy of model is :  0.9385964912280702
+[[37  5]
+ [ 2 70]]
+              precision    recall  f1-score   support
+
+           0       0.95      0.88      0.91        42
+           1       0.93      0.97      0.95        72
+
+    accuracy                           0.94       114
+   macro avg       0.94      0.93      0.93       114
+weighted avg       0.94      0.94      0.94       114
+
+SVC(kernel='linear')
+SVC(kernel='linear')
+[1 0 1 0 0 0 0 0 1 1 1 0 0 1 1 1 1 1 1 0 1 1 0 1 0 1 1 0 0 0 0 1 0 0 1 1 0
+ 1 1 1 1 1 1 1 1 0 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 0 1 1 1 1 1 0
+ 1 0 1 1 1 0 1 0 1 0 1 1 0 1 0 1 1 0 1 1 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0
+ 1 1 1]
+421    1
+47     0
+292    1
+186    0
+414    0
+      ..
+172    0
+3      0
+68     1
+448    1
+442    1
+Name: target, Length: 114, dtype: int32
+GridSearchCV(cv=5, estimator=SVC(),
+             param_grid={'C': [0.01, 0.1, 3, 7, 10],
+                         'kernel': ['rbf', 'poly', 'linear']})
+{'C': 0.01, 'kernel': 'linear'}
+Accuracy after SVC:  0.956043956043956
+Accuracy after decision tree:  0.9298245614035088
+
+Answer -
+logistic  algorithm =  94.7
+ knn algorithm  =  93.85
+decision tree algorithm  = 92.98
+SVC algorithm  =  95.60
+SVC Algorithm gives best accuracy than others.
+So, SVC works best on this dataset.
